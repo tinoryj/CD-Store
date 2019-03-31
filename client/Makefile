@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -O3 -Wall -fno-operator-names
-LIBS = -lcrypto -lssl -lpthread 
-INCLUDES =-I./lib/cryptopp -I./comm -I./coding -I./chunking -I./utils
+LIBS = -lcrypto -lssl -lpthread - - -lmbedcrypto  -lisal #-pg -lc -ggdb
+INCLUDES =-I./lib/cryptopp -I./comm -I./coding -I./chunking -I./utils -I./sslib
 MAIN_OBJS = ./chunking/chunker.o ./utils/CryptoPrimitive.o ./coding/CDCodec.o ./coding/encoder.o ./comm/uploader.o ./utils/socket.o ./comm/downloader.o ./coding/decoder.o 
 
 all: client
