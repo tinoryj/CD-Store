@@ -5,14 +5,15 @@
 #ifndef __CRYPTOPRIMITIVE_HH__
 #define __CRYPTOPRIMITIVE_HH__
 
+#include <stdint.h> /*for uint32_t*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h> /*for uint32_t*/
 #include <string.h>
 
 /*for the use of OpenSSL*/
-#include <openssl/evp.h>
 #include <openssl/crypto.h>
+#include <openssl/evp.h>
+#include <openssl/rand.h>
 #define OPENSSL_THREAD_DEFINES
 #include <openssl/opensslconf.h>
 /*macro for OpenSSL debug*/
@@ -32,95 +33,95 @@
 using namespace std;
 
 typedef struct {
-	pthread_mutex_t *lockList;
-	long *cntList;
-}opensslLock_t;
+    pthread_mutex_t* lockList;
+    long* cntList;
+} opensslLock_t;
 
-class CryptoPrimitive{
-	private:
-		/*the type of CryptoPrimitive*/
-		int cryptoType_;
+class CryptoPrimitive {
+private:
+    /*the type of CryptoPrimitive*/
+    int cryptoType_;
 
-		/*variables used in hash calculation*/
-		EVP_MD_CTX mdctx_;
-		const EVP_MD *md_;
-		/*the size of the generated hash*/
-		int hashSize_;
+    /*variables used in hash calculation*/
+    EVP_MD_CTX mdctx_;
+    const EVP_MD* md_;
+    /*the size of the generated hash*/
+    int hashSize_;
 
-		/*variables used in encryption*/
-		EVP_CIPHER_CTX cipherctx_;
-		const EVP_CIPHER *cipher_;
-		unsigned char *iv_;
+    /*variables used in encryption*/
+    EVP_CIPHER_CTX cipherctx_;
+    const EVP_CIPHER* cipher_;
+    unsigned char* iv_;
 
-		/*the size of the key for encryption*/
-		int keySize_;
-		/*the size of the encryption block unit*/
-		int blockSize_;
+    /*the size of the key for encryption*/
+    int keySize_;
+    /*the size of the encryption block unit*/
+    int blockSize_;
 
-		/*OpenSSL lock*/
-		static opensslLock_t *opensslLock_;
+    /*OpenSSL lock*/
+    static opensslLock_t* opensslLock_;
 
-		/*
+    /*
 		 * OpenSSL locking callback function
 		 */
-		static void opensslLockingCallback_(int mode, int type, const char *file, int line);
+    static void opensslLockingCallback_(int mode, int type, const char* file, int line);
 
-		/*
+    /*
 		 * get the id of the current thread
 		 *
 		 * @param id - the thread id <return>
 		 */
-		static void opensslThreadID_(CRYPTO_THREADID *id);
+    static void opensslThreadID_(CRYPTO_THREADID* id);
 
-	public:
-		/*
+public:
+    /*
 		 * constructor of CryptoPrimitive
 		 *
 		 * @param cryptoType - the type of CryptoPrimitive
 		 */
-		CryptoPrimitive(int cryptoType = HIGH_SEC_PAIR_TYPE);
+    CryptoPrimitive(int cryptoType = HIGH_SEC_PAIR_TYPE);
 
-		/*
+    /*
 		 * destructor of CryptoPrimitive
 		 */
-		~CryptoPrimitive();
+    ~CryptoPrimitive();
 
-		/*
+    /*
 		 * set up OpenSSL locks
 		 *
 		 * @return - a boolean value that indicates if the setup succeeds
 		 */
-		static bool opensslLockSetup();
+    static bool opensslLockSetup();
 
-		/*
+    /*
 		 * clean up OpenSSL locks
 		 *
 		 * @return - a boolean value that indicates if the cleanup succeeds
 		 */
-		static bool opensslLockCleanup();
+    static bool opensslLockCleanup();
 
-		/*
+    /*
 		 * get the hash size
 		 *
 		 * @return - the hash size
 		 */
-		int getHashSize();
+    int getHashSize();
 
-		/*
+    /*
 		 * get the key size
 		 *
 		 * @return - the key size
 		 */
-		int getKeySize();
+    int getKeySize();
 
-		/*
+    /*
 		 * get the size of the encryption block unit
 		 *
 		 * @return - the block size
 		 */
-		int getBlockSize();
+    int getBlockSize();
 
-		/*
+    /*
 		 * generate the hash for the data stored in a buffer
 		 *
 		 * @param dataBuffer - the buffer that stores the data
@@ -129,9 +130,9 @@ class CryptoPrimitive{
 		 *
 		 * @return - a boolean value that indicates if the hash generation succeeds
 		 */
-		bool generateHash(unsigned char *dataBuffer, const int &dataSize, unsigned char *hash);
+    bool generateHash(unsigned char* dataBuffer, const int& dataSize, unsigned char* hash);
 
-		/*
+    /*
 		 * encrypt the data stored in a buffer with a key
 		 *
 		 * @param dataBuffer - the buffer that stores the data
@@ -141,8 +142,10 @@ class CryptoPrimitive{
 		 *
 		 * @return - a boolean value that indicates if the encryption succeeds
 		 */
-		bool encryptWithKey(unsigned char *dataBuffer, const int &dataSize, unsigned char *key, 
-				unsigned char *ciphertext);
+    bool encryptWithKey(unsigned char* dataBuffer, const int& dataSize, unsigned char* key,
+        unsigned char* ciphertext);
+
+    bool generateRandom(int randomSize, unsigned char* random);
 };
 
 #endif

@@ -15,8 +15,10 @@
 /// \param k minimum number of shares for successful reconstruction
 /// \param r maximum number of shares that leak nothing about original secret
 /// \param cryptoUtil the pointer to the cryptoUtil
-CaontRSOAEP::CaontRSOAEP(int n, int k, int r, CryptoUtil *cryptoUtil) : AontRS(n, k, r, cryptoUtil) {
-    alignedSizeConstant_ = (unsigned char *) malloc(sizeof(unsigned char) * alignedSecretBufferSize_);
+CaontRSOAEP::CaontRSOAEP(int n, int k, int r, CryptoPrimitive* cryptoUtil)
+    : AontRS(n, k, r, cryptoUtil)
+{
+    alignedSizeConstant_ = (unsigned char*)malloc(sizeof(unsigned char) * alignedSecretBufferSize_);
     for (int i = 0; i < alignedSecretBufferSize_; i++) {
         alignedSizeConstant_[i] = i & 0xff;
     }
@@ -24,7 +26,8 @@ CaontRSOAEP::CaontRSOAEP(int n, int k, int r, CryptoUtil *cryptoUtil) : AontRS(n
 
 /// \brief Destroy the Caont-RS object
 ///
-CaontRSOAEP::~CaontRSOAEP() {
+CaontRSOAEP::~CaontRSOAEP()
+{
     free(alignedSizeConstant_);
 }
 
@@ -35,8 +38,9 @@ CaontRSOAEP::~CaontRSOAEP() {
 /// \param shareBuffer a buffer that stores all output shares
 /// \param shareSize the size of each output share
 ///
-/// \return true if succeed and false otherwise  
-bool CaontRSOAEP::shareSecret(unsigned char *secretBuffer, int secretSize, unsigned char *shareBuffer, int *shareSize) {
+/// \return true if succeed and false otherwise
+bool CaontRSOAEP::shareSecret(unsigned char* secretBuffer, int secretSize, unsigned char* shareBuffer, int* shareSize)
+{
     if (DEBUG_OUTPUT) {
         printf("Start to generate shares by using CAONT-RS-OAEP.\n");
     }
@@ -49,9 +53,8 @@ bool CaontRSOAEP::shareSecret(unsigned char *secretBuffer, int secretSize, unsig
 
     if (((secretSize + bytesPerSecretWord_) % (bytesPerSecretWord_ * k_)) == 0) {
         alignedSecretSize = secretSize;
-    }else {
-        alignedSecretSize = (bytesPerSecretWord_ * k_) *
-            (((secretSize + bytesPerSecretWord_) / (bytesPerSecretWord_ * k_)) + 1) - bytesPerSecretWord_;
+    } else {
+        alignedSecretSize = (bytesPerSecretWord_ * k_) * (((secretSize + bytesPerSecretWord_) / (bytesPerSecretWord_ * k_)) + 1) - bytesPerSecretWord_;
     }
     if (alignedSecretBufferSize_ < alignedSecretSize) {
         if (DEBUG_OUTPUT) {
@@ -66,9 +69,9 @@ bool CaontRSOAEP::shareSecret(unsigned char *secretBuffer, int secretSize, unsig
     if (DEBUG_OUTPUT) {
         printf("alignedSecretSize = %d\n", alignedSecretSize);
         printf("bytesPerSecretWord = %d\n",
-        bytesPerSecretWord_);
-        printf("numOfSecretWords = %d\n", 
-        (alignedSecretSize / bytesPerSecretWord_));
+            bytesPerSecretWord_);
+        printf("numOfSecretWords = %d\n",
+            (alignedSecretSize / bytesPerSecretWord_));
     }
 
     /**copy the secret from secretBuffer to alignedSecretBuffer */
@@ -76,7 +79,7 @@ bool CaontRSOAEP::shareSecret(unsigned char *secretBuffer, int secretSize, unsig
     if (alignedSecretSize != secretSize) {
 
         if (DEBUG_OUTPUT) {
-            printf("alignedSecretSize is larger than the size of secretSize panding remaining space with 0. \n"); 
+            printf("alignedSecretSize is larger than the size of secretSize panding remaining space with 0. \n");
             printf("padding remaining space: %d\n", (alignedSecretSize - secretSize));
         }
 
@@ -100,7 +103,7 @@ bool CaontRSOAEP::shareSecret(unsigned char *secretBuffer, int secretSize, unsig
      */
     if (!cryptoUtil_->encryptWithKey(alignedSizeConstant_, alignedSecretSize, key_, erasureCodingData_)) {
         printf("Error: the data encryption fails.\n");
-        return false;        
+        return false;
     }
 
     /**
@@ -125,52 +128,51 @@ bool CaontRSOAEP::shareSecret(unsigned char *secretBuffer, int secretSize, unsig
     memcpy(shareBuffer, erasureCodingData_, alignedSecretSize + bytesPerSecretWord_);
 
     /**Since using systematic EC, it only needs to generate only the last m shares from AONT package*/
-    if(!rsUtil_->reEncoding(erasureCodingData_, shareBuffer, shareSize)) {
+    if (!rsUtil_->reEncoding(erasureCodingData_, shareBuffer, shareSize)) {
         printf("Error: Encoding fails.\n");
         exit(1);
     }
     return true;
-
 }
-
 
 /// \brief Reconstrct recover the original secret from AONT-RS shares
 ///
 /// \param shareBuffer a buffer that stores the input shares
 /// \param shareSize the size of each share
-/// \param shareIDList a list of share IDs 
+/// \param shareIDList a list of share IDs
 /// \param secretBuffer a buffer that stores the output secret
 /// \param secretSize the size of recovered secret
 ///
 /// \return true if succeed and false otherwise
-bool CaontRSOAEP::reconstructSecret(unsigned char *shareBuffer, int shareSize, int *shareIDList, unsigned char *secretBuffer, int secretSize) {
+bool CaontRSOAEP::reconstructSecret(unsigned char* shareBuffer, int shareSize, int* shareIDList, unsigned char* secretBuffer, int secretSize)
+{
     if (DEBUG_OUTPUT) {
         printf("Start ti restore the secret by using CAONT-RS-OAEP.\n");
     }
     int alignedSecretSize;
 
-    if ((shareSize % bytesPerSecretWord_) != 0) {		
-        printf("Error: the share size (i.e. %d bytes) should be a multiple of secret word size (i.e. %d bytes)!\n", 
-                shareSize, bytesPerSecretWord_);	
+    if ((shareSize % bytesPerSecretWord_) != 0) {
+        printf("Error: the share size (i.e. %d bytes) should be a multiple of secret word size (i.e. %d bytes)!\n",
+            shareSize, bytesPerSecretWord_);
 
         return false;
     }
 
     if (erasureCodingDataSize_ < shareSize * k_) {
-        printf("Error: please use an internal erasureCodingData_[] of size >= %d bytes!\n", 
+        printf("Error: please use an internal erasureCodingData_[] of size >= %d bytes!\n",
             shareSize * k_);
         return false;
     }
 
     alignedSecretSize = shareSize * k_ - bytesPerSecretWord_;
 
-    if (alignedSecretBufferSize_ < alignedSecretSize) {		
+    if (alignedSecretBufferSize_ < alignedSecretSize) {
         printf("Error: please use an internal alignedSecretBuffer_[] of size >= %d bytes!\n", alignedSecretSize);
 
         return false;
     }
 
-    if (secretSize > alignedSecretSize) {		
+    if (secretSize > alignedSecretSize) {
         printf("Error: the input secret size (%d bytes) cannot exceed %d bytes!\n", secretSize, alignedSecretSize);
 
         return false;
@@ -181,20 +183,20 @@ bool CaontRSOAEP::reconstructSecret(unsigned char *shareBuffer, int shareSize, i
     rsUtil_->storeKRowsMatrix(shareIDList);
     /**invert squareMatrix_ into inverseMatrix_ */
     //TODO: Move this to RSUtil
-    if(!rsUtil_->squareMatrixInverting()) {
+    if (!rsUtil_->squareMatrixInverting()) {
         printf("Error: Decoding Matrix generation fails.\n");
         return false;
     }
 
     /**perform RS decoding and obtain the CAONT package in erasureCodingData_ */
     //TODO: Move this to RSUtil
-    if(!rsUtil_->rsDecoding(shareBuffer, erasureCodingData_, secretSize)) {
+    if (!rsUtil_->rsDecoding(shareBuffer, erasureCodingData_, secretSize)) {
         printf("Error: Decoding fails.\n");
         return false;
     }
 
     /**generate a hash from the main part of the CAONT package, and temporarily store it into key*/
-    if (!cryptoUtil_->generateHash(erasureCodingData_, alignedSecretSize, key_)){
+    if (!cryptoUtil_->generateHash(erasureCodingData_, alignedSecretSize, key_)) {
         printf("Error: Hash generation fails (restoring).\n");
         return false;
     }
@@ -212,7 +214,7 @@ bool CaontRSOAEP::reconstructSecret(unsigned char *shareBuffer, int shareSize, i
 
     /**the aligned secret is obtained by XORing the ciphertext with the main part of the CAONT package stored in erasureCodingData_*/
 
-    rsUtil_->addXOR(alignedSecretBuffer_,erasureCodingData_, alignedSecretSize);
+    rsUtil_->addXOR(alignedSecretBuffer_, erasureCodingData_, alignedSecretSize);
 
     /**generate a hash from the aligned secret, and temporarily store it in the front end of erasureCodingData_*/
 
@@ -220,18 +222,17 @@ bool CaontRSOAEP::reconstructSecret(unsigned char *shareBuffer, int shareSize, i
         printf("Error: fail in the hash calculation!\n");
 
         return false;
-    }	
+    }
 
     /**check if the generated hash is the same as the previous used key*/
 
     if (memcmp(erasureCodingData_, key_, bytesPerSecretWord_) != 0) {
         printf("Error: fail in integrity checking!\n");
 
-        return 0; 
+        return 0;
     }
 
     memcpy(secretBuffer, alignedSecretBuffer_, secretSize);
 
     return true;
-
 }

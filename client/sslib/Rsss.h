@@ -22,8 +22,7 @@ using namespace std;
 
 class Rsss : public AbsSecretSharing {
 protected:
-    
-    unsigned char* randomInputBuffer_; /// temp buffer for generating and storing r randoms
+        unsigned char* randomInputBuffer_; /// temp buffer for generating and storing r randoms
     unsigned char* rRandom_; /// temp buffer for generating and storing r randoms
     int erasureCodingDataSize_; /// buffer for storing the data before erasure
         /// coding's size
@@ -39,7 +38,7 @@ public:
     /// \param k minimum number of shares for successful reconstruction
     /// \param r maximum number of shares that leak nothing about original secret
     /// \param cryptoUtil the pointer to the cyrptoUtil
-    Rsss(int n, int k, int r, CryptoUtil* cryptoUtil);
+    Rsss(int n, int k, int r, CryptoPrimitive* cryptoUtil);
     /// \brief Rsss deconstruct
     ///
     ~Rsss() = default;

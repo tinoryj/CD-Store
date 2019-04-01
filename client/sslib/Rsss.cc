@@ -4,7 +4,7 @@
 
 #include "Rsss.h"
 
-Rsss::Rsss(int n, int k, int r, CryptoUtil* cryptoUtil)
+Rsss::Rsss(int n, int k, int r, CryptoPrimitive* cryptoUtil)
     : AbsSecretSharing(n, k, r, cryptoUtil)
 {
     cryptoUtil_ = cryptoUtil;

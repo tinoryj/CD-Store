@@ -15,10 +15,6 @@
 #include "Rsss.h"
 #include <bits/stdc++.h>
 
-extern "C" {
-#include "gf_complete.h"
-}
-
 using namespace std;
 
 class CRsss : public Rsss {
@@ -34,7 +30,7 @@ public:
     /// \param k minimum number of shares for successful reconstruction
     /// \param r maximum number of shares that leak nothing about original secret
     /// \param cryptoUtil the pointer to the cyrptoUtil
-    CRsss(int n, int k, int r, CryptoUtil* cryptoUtil);
+    CRsss(int n, int k, int r, CryptoPrimitive* cryptoUtil);
     ~CRsss() = default;
     /// \brief Share encode a secret via AONT-RS
     ///

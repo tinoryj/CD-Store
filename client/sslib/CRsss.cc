@@ -4,7 +4,7 @@
 
 #include "CRsss.h"
 
-CRsss::CRsss(int n, int k, int r, CryptoUtil* cryptoUtil)
+CRsss::CRsss(int n, int k, int r, CryptoPrimitive* cryptoUtil)
     : Rsss(n, k, r, cryptoUtil)
 {
     cryptoUtil_ = cryptoUtil;
